@@ -57,5 +57,14 @@ namespace NationBuilder.Controllers
             _db.SaveChanges();
             return View(currentNation);
         }
+
+        public IActionResult GetCurrentResources()
+        {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            ApplicationUser user = _db.Users.FirstOrDefault(u => u.Id == userId);
+            Nation currentNation = _db.Nations.Include(n => n.ResourcesObj).FirstOrDefault(n => n.User == user);
+
+            return Json(currentNation.ResourcesObj);
+        }
     }
 }

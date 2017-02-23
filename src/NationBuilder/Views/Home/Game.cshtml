@@ -1,4 +1,36 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
 }
+@model NationBuilder.Models.Nation
 
+<div id="resource-panel">
+    
+</div>
+
+<button type="button" id="refresh-resources">click</button>
+
+<div id="resource-on-page-start">
+    @foreach(var key in Model.Resources.Keys.ToList())
+    {
+        <p>@key</p>
+        <p>Current: @Model.Resources[key], Growth: @Model.ResourceGrowth[key]</p>
+    }
+</div>
+
+<script>
+    $(function () {
+        @*$("#refresh-resources").click(function () {
+            $.ajax({
+                type: "GET",
+                dataType: 'json',
+                contentType: 'application/json',
+                url: '@Url.Action("GetCurrentResources")',
+                success: function (result) {
+                    console.log(result);
+                    var resultString = "Moo: " + result.population;
+                    $('#resource-panel').html(resultString);
+                }
+            });
+        });*@
+    });
+</script>
