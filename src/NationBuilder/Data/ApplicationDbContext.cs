@@ -19,5 +19,7 @@ namespace NationBuilder.Data
         {
             base.OnModelCreating(builder);
         }
+        public DbSet<Nation> Nations { get; set; }
+        public DbSet<Resource> Resources { get; set; }
     }
 }

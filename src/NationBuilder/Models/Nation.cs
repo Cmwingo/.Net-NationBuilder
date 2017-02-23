@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -16,10 +17,16 @@ namespace NationBuilder.Models
         public string Economy { get; set; }
         public string Geography { get; set; }
         public string Religion { get; set; }
+        [NotMapped]
         public Dictionary<string, int> Resources { get; set; }
+        [NotMapped]
         public Dictionary<string, int> ResourceGrowth { get; set; }
+        [NotMapped]
         public int LaborPoints { get; set; }
+        [NotMapped]
         public Dictionary<string, int> LaborPool { get; set; }
+        public virtual Resource ResourcesObj { get; set; }
+        public virtual ApplicationUser User { get; set; }
 
         public Nation(string NationName, string NationCapital, string NationGovernment, string NationEconomy, string NationGeography, string NationReligion)
         {
@@ -30,6 +37,11 @@ namespace NationBuilder.Models
             Economy = NationEconomy.ToLower();
             Geography = NationGeography.ToLower();
             Religion = NationReligion.ToLower();
+        }
+
+        // Don't run build until you have an associated resource!
+        public void Build()
+        {
             Resources = new Dictionary<string, int>
             {
                 ["Population"] = 1000,
@@ -43,7 +55,8 @@ namespace NationBuilder.Models
                 ["Rare Earth"] = 100,
                 ["Steel"] = 100
             };
-            ResourceGrowth = new Dictionary<string, int> {
+            ResourceGrowth = new Dictionary<string, int>
+            {
                 ["Population"] = 100,
                 ["Happiness"] = 0,
                 ["Coal"] = 20,
@@ -136,7 +149,7 @@ namespace NationBuilder.Models
                 case "barter":
                     foreach (var key in ResourceGrowth.Keys.ToList())
                     {
-                        if(key == "Population")
+                        if (key == "Population")
                         {
                             ResourceGrowth[key] += 20;
                         }
@@ -147,22 +160,114 @@ namespace NationBuilder.Models
                     }
                     break;
             }
+
+            SaveResources();
         }
 
         public void EndTurn()
         {
-            LaborPoints = Resources["Population"] / 1000;
-
             foreach (var key in ResourceGrowth.Keys.ToList())
             {
                 Resources[key] += (ResourceGrowth[key] + (LaborPool[key] * 20));
-                if(Resources[key] < 0)
+            }
+
+            Resources["Population"] += (Resources["Food"] / 10);
+
+            foreach (var key in ResourceGrowth.Keys.ToList())
+            {
+                if (Resources[key] <= 0)
                 {
-                    Resources["Happiness"] -= 5;
+                    var happyReduce = Resources[key] / -100;
+                    Resources["Happiness"] -= ((happyReduce * 2) + 2);
+                    if(key == "Food")
+                    {
+                        Resources["Population"] -= ((Resources[key] / -10) + 100);
+                    }
                 }
             }
-            
+
+            LaborPoints = Resources["Population"] / 1000;
         }
 
+        public void RetrieveResources()
+        {
+            LaborPoints = ResourcesObj.LaborPoints;
+
+            Resources = new Dictionary<string, int>
+            {
+                ["Population"] = ResourcesObj.Population,
+                ["Happiness"] = ResourcesObj.Happiness,
+                ["Coal"] = ResourcesObj.Coal,
+                ["Currency"] = ResourcesObj.Currency,
+                ["Food"] = ResourcesObj.Food,
+                ["Lumber"] = ResourcesObj.Lumber,
+                ["Medical"] = ResourcesObj.Medical,
+                ["Oil"] = ResourcesObj.Oil,
+                ["Rare Earth"] = ResourcesObj.RareEarth,
+                ["Steel"] = ResourcesObj.Steel
+            };
+
+            ResourceGrowth = new Dictionary<string, int>
+            {
+                ["Population"] = ResourcesObj.PopulationGrowth,
+                ["Happiness"] = ResourcesObj.HappinessGrowth,
+                ["Coal"] = ResourcesObj.CoalGrowth,
+                ["Currency"] = ResourcesObj.CurrencyGrowth,
+                ["Food"] = ResourcesObj.FoodGrowth,
+                ["Lumber"] = ResourcesObj.LumberGrowth,
+                ["Medical"] = ResourcesObj.MedicalGrowth,
+                ["Oil"] = ResourcesObj.OilGrowth,
+                ["Rare Earth"] = ResourcesObj.RareEarthGrowth,
+                ["Steel"] = ResourcesObj.SteelGrowth
+            };
+
+            LaborPool = new Dictionary<string, int>
+            {
+                ["Coal"] = ResourcesObj.CoalLabor,
+                ["Currency"] = ResourcesObj.CurrencyLabor,
+                ["Food"] = ResourcesObj.FoodLabor,
+                ["Lumber"] = ResourcesObj.LumberLabor,
+                ["Medical"] = ResourcesObj.MedicalLabor,
+                ["Oil"] = ResourcesObj.OilLabor,
+                ["Rare Earth"] = ResourcesObj.RareEarthLabor,
+                ["Steel"] = ResourcesObj.SteelLabor
+            };
+        }
+
+        public void SaveResources()
+        {
+            ResourcesObj.LaborPoints = LaborPoints;
+
+            ResourcesObj.Population = Resources["Population"];
+            ResourcesObj.Happiness = Resources["Happiness"];
+            ResourcesObj.Coal = Resources["Coal"];
+            ResourcesObj.Currency = Resources["Currency"];
+            ResourcesObj.Food = Resources["Food"];
+            ResourcesObj.Lumber = Resources["Lumber"];
+            ResourcesObj.Medical = Resources["Medical"];
+            ResourcesObj.Oil = Resources["Oil"];
+            ResourcesObj.RareEarth = Resources["Rare Earth"];
+            ResourcesObj.Steel = Resources["Steel"];
+
+            ResourcesObj.PopulationGrowth = ResourceGrowth["Population"];
+            ResourcesObj.HappinessGrowth = ResourceGrowth["Happiness"];
+            ResourcesObj.CoalGrowth = ResourceGrowth["Coal"];
+            ResourcesObj.CurrencyGrowth = ResourceGrowth["Currency"];
+            ResourcesObj.FoodGrowth = ResourceGrowth["Food"];
+            ResourcesObj.LumberGrowth = ResourceGrowth["Lumber"];
+            ResourcesObj.MedicalGrowth = ResourceGrowth["Medical"];
+            ResourcesObj.OilGrowth = ResourceGrowth["Oil"];
+            ResourcesObj.RareEarthGrowth = ResourceGrowth["Rare Earth"];
+            ResourcesObj.SteelGrowth = ResourceGrowth["Steel"];
+
+            ResourcesObj.CoalLabor = LaborPool["Coal"];
+            ResourcesObj.CurrencyLabor = LaborPool["Currency"];
+            ResourcesObj.FoodLabor = LaborPool["Food"];
+            ResourcesObj.LumberLabor = LaborPool["Lumber"];
+            ResourcesObj.MedicalLabor = LaborPool["Medical"];
+            ResourcesObj.OilLabor = LaborPool["Oil"];
+            ResourcesObj.RareEarthLabor = LaborPool["Rare Earth"];
+            ResourcesObj.SteelLabor = LaborPool["Steel"];
+        }
     }
 }
