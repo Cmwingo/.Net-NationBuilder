@@ -28,16 +28,16 @@ namespace NationBuilder.Models
         public virtual Resource ResourcesObj { get; set; }
         public virtual ApplicationUser User { get; set; }
 
-        public Nation(string NationName, string NationCapital, string NationGovernment, string NationEconomy, string NationGeography, string NationReligion)
-        {
-            
-            Name = NationName;
-            Capital = NationCapital;
-            Government = NationGovernment.ToLower();
-            Economy = NationEconomy.ToLower();
-            Geography = NationGeography.ToLower();
-            Religion = NationReligion.ToLower();
-        }
+        //public Nation(string NationName, string NationCapital, string NationGovernment, string NationEconomy, string NationGeography, string NationReligion)
+        //{
+
+        //    Name = NationName;
+        //    Capital = NationCapital;
+        //    Government = NationGovernment.ToLower();
+        //    Economy = NationEconomy.ToLower();
+        //    Geography = NationGeography.ToLower();
+        //    Religion = NationReligion.ToLower();
+        //}
 
         // Don't run build until you have an associated resource!
         public void Build()
@@ -68,7 +68,7 @@ namespace NationBuilder.Models
                 ["Rare Earth"] = 20,
                 ["Steel"] = 20
             };
-            LaborPoints = 1;
+            //LaborPoints = 1;
             LaborPool = new Dictionary<string, int>
             {
                 ["Population"] = 0,
@@ -166,6 +166,8 @@ namespace NationBuilder.Models
 
         public void EndTurn()
         {
+            RetrieveResources();
+
             foreach (var key in ResourceGrowth.Keys.ToList())
             {
                 Resources[key] += (ResourceGrowth[key] + (LaborPool[key] * 20));
@@ -187,8 +189,11 @@ namespace NationBuilder.Models
             }
 
             LaborPoints = Resources["Population"] / 1000;
+
+            SaveResources();
         }
 
+        // Workarounds due to Entity Frameworks inability to natively map dictionaries to databases
         public void RetrieveResources()
         {
             LaborPoints = ResourcesObj.LaborPoints;
@@ -236,7 +241,8 @@ namespace NationBuilder.Models
 
         public void SaveResources()
         {
-            ResourcesObj.LaborPoints = LaborPoints;
+            ResourcesObj.LaborPoints = 0;
+            ResourcesObj.LaborPoints += LaborPoints;
 
             ResourcesObj.Population = Resources["Population"];
             ResourcesObj.Happiness = Resources["Happiness"];
@@ -269,5 +275,6 @@ namespace NationBuilder.Models
             ResourcesObj.RareEarthLabor = LaborPool["Rare Earth"];
             ResourcesObj.SteelLabor = LaborPool["Steel"];
         }
+        // end of workarounds
     }
 }
