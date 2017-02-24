@@ -3,7 +3,7 @@
 }
 @model NationBuilder.Models.Nation
 
-<div id="resource-panel">
+@*<div id="resource-panel">
     
 </div>
 
@@ -15,16 +15,48 @@
         <p>@key</p>
         <p>Current: @Model.Resources[key], Growth: @Model.ResourceGrowth[key]</p>
     }
+</div>*@
+<button type="button" id="end-turn">End Your Turn</button>
+
+<div id="new-turn">
+    @foreach (var key in Model.Resources.Keys.ToList())
+    {
+        <p>@key: @Model.Resources[key]</p>
+    }
+    <p>Labor Points: @Model.LaborPoints</p>
+    @foreach (var key in Model.Resources.Keys.ToList())
+    {
+        <p>@key Growth: @Model.ResourceGrowth[key]</p>
+    }
+    @foreach (var key in Model.Resources.Keys.ToList())
+    {
+        @if(key != "Population" && key != "Happiness")
+        {
+            <p>@key Labor: @Model.LaborPool[key]</p>
+        }
+    }
 </div>
 
 <script>
+    function addLabor(resource) {
+        $.ajax({
+            url: "@Url.Action("AddLabor")",
+            type: "POST",
+            dataType: "json",
+            data: { selectedResource: resource }
+                success: function (result) {
+                    $("#" + key).text(result["\"" + resource + "\""]);
+                }
+        });
+    }
+
     $(function () {
         @*$("#refresh-resources").click(function () {
             $.ajax({
                 type: "GET",
                 dataType: 'json',
                 contentType: 'application/json',
-                url: '@Url.Action("GetCurrentResources")',
+                url: "@Url.Action("GetCurrentResources")",
                 success: function (result) {
                     console.log(result);
                     var resultString = "Moo: " + result.population;
@@ -32,5 +64,33 @@
                 }
             });
         });*@
+
+
+
+        $("#end-turn").click(function () {
+            var invalidProps = ["nation", "nationId", "resourcesId"];
+
+            $.ajax({
+                type: "GET",
+                dataType: "json",
+                contentType: "application/json",
+                url: "@Url.Action("EndTurn")",
+                success: function (result) {
+                    var resultString = "";
+                    $.each(result, function (key, val) {
+                        if (!invalidProps.includes(key)) {
+                            resultString += "<p>" + key + ": <span id='"+ key +"'>" + val + "</span></p>";
+                            if (key.includes("Labor")) {
+                                resultString += "<button type='button' onclick='addLabor("
+                                    + key
+                                    + ")'>add labor</button>";
+                            }
+                            
+                        }
+                    });
+                    $("#new-turn").html(resultString);
+                }
+            });
+        });
     });
 </script>

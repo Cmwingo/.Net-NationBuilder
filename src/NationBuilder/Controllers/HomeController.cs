@@ -66,5 +66,37 @@ namespace NationBuilder.Controllers
 
             return Json(currentNation.ResourcesObj);
         }
+
+        public IActionResult EndTurn()
+        {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            ApplicationUser user = _db.Users.FirstOrDefault(u => u.Id == userId);
+            Nation currentNation = _db.Nations.Include(n => n.ResourcesObj).FirstOrDefault(n => n.User == user);
+            currentNation.EndTurn();
+            _db.Entry(currentNation).State = EntityState.Modified;
+            _db.SaveChanges();
+
+            return Json(currentNation.ResourcesObj);
+        }
+
+        public IActionResult AddLabor(string selectedResource)
+        {
+            string[] tempResource = selectedResource.Split();
+            tempResource[0] = tempResource[0].ToUpper();
+            selectedResource = tempResource.ToString();
+            selectedResource.Replace("Labor", "");
+
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            ApplicationUser user = _db.Users.FirstOrDefault(u => u.Id == userId);
+            Nation currentNation = _db.Nations.Include(n => n.ResourcesObj).FirstOrDefault(n => n.User == user);
+            currentNation.RetrieveResources();
+            currentNation.LaborPool[selectedResource]++;
+            currentNation.SaveResources();
+            _db.Entry(currentNation).State = EntityState.Modified;
+            _db.Entry(currentNation.ResourcesObj).State = EntityState.Modified;
+            _db.SaveChanges();
+
+            return Json(currentNation.ResourcesObj);
+        }
     }
 }

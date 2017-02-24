@@ -68,7 +68,7 @@ namespace NationBuilder.Models
                 ["Rare Earth"] = 20,
                 ["Steel"] = 20
             };
-            //LaborPoints = 1;
+            LaborPoints = 1;
             LaborPool = new Dictionary<string, int>
             {
                 ["Population"] = 0,
@@ -179,6 +179,7 @@ namespace NationBuilder.Models
             {
                 if (Resources[key] <= 0)
                 {
+                    // consider adding food based growth directly to growth instead of just growing
                     var happyReduce = Resources[key] / -100;
                     Resources["Happiness"] -= ((happyReduce * 2) + 2);
                     if(key == "Food")
@@ -188,7 +189,8 @@ namespace NationBuilder.Models
                 }
             }
 
-            LaborPoints = Resources["Population"] / 1000;
+            int baseLabor = Government == "communism" ? 2 : 0;
+            LaborPoints = Resources["Population"] / 1000 + baseLabor;
 
             SaveResources();
         }
@@ -228,6 +230,8 @@ namespace NationBuilder.Models
 
             LaborPool = new Dictionary<string, int>
             {
+                ["Population"] = 0,
+                ["Happiness"] = 0,
                 ["Coal"] = ResourcesObj.CoalLabor,
                 ["Currency"] = ResourcesObj.CurrencyLabor,
                 ["Food"] = ResourcesObj.FoodLabor,
